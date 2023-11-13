@@ -1,9 +1,9 @@
-let data = []; // Initialize the data variable in the outer scope
+let data = [];
 
 // User finds the csv file
 document.getElementById("CsvFile").addEventListener('change', ReadCSV);
 
-// Process the csv data into an array
+//csv data into an array
 function separateByComa(csvData) {
     const lines = csvData.split('\n');
     data = [];
@@ -37,63 +37,74 @@ function ReadCSV(e) {
             const gautengData = separateOnlyGauteng(originalData);
 
             // Calculate monthly averages for all months
-            const monthlyAverages = calculateMonthlyAverages(gautengData);
+            const monthlyAverages = calculateMonthlyAveragesForWorkGraph(gautengData);
+            // Calculate monthly averages for Gauteng
+            const gautengMonthlyAverages = calculateMonthlyAveragesForGroceryGraph(gautengData);
+            // Separate data for Eastern Cape
+            const easternCapeData = separateOnlyEasternCape(originalData);
 
+            // Calculate monthly averages for Eastern Cape
+            const easternCapeMonthlyAverages = calculateMonthlyAveragesForGroceryGraph(easternCapeData);
             // Extract months and averages from the monthly averages object
             const months = Object.keys(monthlyAverages);
-            const monthlyAveragesValues = Object.values(monthlyAverages);
-
+            const monthlyWorkAveragesValues = Object.values(monthlyAverages);
+            const gautengAveragesValues = Object.values(gautengMonthlyAverages);
+            const easternCapeAveragesValues = Object.values(easternCapeMonthlyAverages);
+            
             // Filter data for January from the copy
             const januaryData = filterDataForJanuary(gautengData);
 
             // Extract 'retail_and_recreation_percent_change_from_baseline' values for January
             const januaryRetailChange = extractRetailChangeValues(januaryData);
+            //Months for WorkChart
+            const monthLabels = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October'];
+            const DayLabels = ['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23',
+            '24','25','26','27','28','29','30','31']
+            
+            createChart('gautengJanuaryChart', DayLabels, januaryRetailChange);
 
-            // Create a chart for January
-            createChart('gautengJanuaryChart', januaryData, januaryRetailChange);
+            
+            createChart2('gautengWorkMonthlyAveragesChartRetail',monthLabels, monthlyWorkAveragesValues);
 
-            // Create the bar chart for monthly averages
-            createChart('gautengWorkMonthlyAveragesChartRetail', months, monthlyWorkAveragesValues);
+            
+            createChart3('GautengECapeGroceryPharmacyChart', monthLabels, gautengAveragesValues, easternCapeAveragesValues);
         }
         reader.readAsText(file);
     }
 }
 
-// Creates a new array with data only for 'Gauteng'
+//Function to create new array
 function separateOnlyGauteng(data) {
-    if (!data) {
-        return [];
-    }
     
     return data.filter(row => row.sub_region_1 === 'Gauteng');
 }
 
-// Filter data for January
+//Function to create new array
 function filterDataForJanuary(data) {
     return data.filter(row => {
-        const date = row.date; // Assuming the date format is 'YYYY/MM/DD'
+        const date = row.date; 
         console.log(date);
-        return date.split('-')[1] === '01'; // Check if the month is January ('01')
+        return date.split('-')[1] === '01';
     });
 }
 
-// Extract 'retail_and_recreation_percent_change_from_baseline' values
+
 function extractRetailChangeValues(data) {
     return data.map(row => parseFloat(row.retail_and_recreation_percent_change_from_baseline));
 }
 
-// Create a chart using Chart.js
-function createChart(elementId, chartData, dataForChart = null) {
+//Chart 1
+function createChart(elementId, labels, dataForChart) {
     const ctx = document.getElementById(elementId).getContext('2d');
 
     const chartConfig = {
         type: 'line',
         data: {
-            labels: chartData.map(row => row.date), // X-axis labels (assuming date format is 'YYYY/MM/DD')
+            labels: labels,
             datasets: [
                 {
-                    label: 'Retail Change in Gauteng for January',
-                    data: dataForChart || chartData, // Y-axis data (use provided data or the whole dataset)
+                    label: 'Retail&Recreation Change',
+                    data: dataForChart || chartData,
                     borderColor: 'rgb(75, 192, 192)',
                     borderWidth: 2,
                 },
@@ -105,7 +116,7 @@ function createChart(elementId, chartData, dataForChart = null) {
                     display: true,
                     title: {
                         display: true,
-                        text: 'Date',
+                        text: 'Day',
                     },
                 },
                 y: {
@@ -117,7 +128,7 @@ function createChart(elementId, chartData, dataForChart = null) {
                     },
                     title: {
                         display: true,
-                        text: 'Retail Change',
+                        text: 'Retail&Recreation Change',
                     },
                 },
             },
@@ -128,7 +139,7 @@ function createChart(elementId, chartData, dataForChart = null) {
                 },
                 title: {
                     display: true,
-                    text: 'Retail Change in Gauteng for January',
+                    text: 'Retail&Recreation Change in Gauteng for January 2022',
                 },
             },
         },
@@ -138,15 +149,12 @@ function createChart(elementId, chartData, dataForChart = null) {
 }
 
 
-//Monthly chart for Workplaces Gauteng
-
-// Calculate monthly averages for all months
-function calculateMonthlyAverages(data) {
+function calculateMonthlyAveragesForWorkGraph(data) {
     const monthlyWorkAverages = {};
 
     data.forEach(row => {
-        const date = row.date; // Assuming the date format is 'YYYY-MM-DD'
-        const month = date.split('-')[1]; // Extract the month part
+        const date = row.date; 
+        const month = date.split('-')[1];
 
         if (!monthlyWorkAverages[month]) {
             monthlyWorkAverages[month] = [];
@@ -155,27 +163,23 @@ function calculateMonthlyAverages(data) {
         monthlyWorkAverages[month].push(parseFloat(row.workplaces_percent_change_from_baseline));
     });
 
-    // Calculate the average for each month
+
+    //Calculate the average for each month
     for (const month in monthlyWorkAverages) {
         const values = monthlyWorkAverages[month];
         const sum = values.reduce((acc, value) => acc + value, 0);
         const average = sum / values.length;
         monthlyWorkAverages[month] = average;
     }
-
     return monthlyWorkAverages;
 }
 
-// Extract months and averages from the monthly averages object
-const months = Object.keys(monthlyWorkAverages);
-const monthlyWorkAveragesValues = Object.values(monthlyWorkAverages);
-
-// Modify the createChart function to handle bar charts
-function createChart(elementId, labels, dataForChart) {
+//Chart 2
+function createChart2(elementId, labels, dataForChart) {
     const ctx = document.getElementById(elementId).getContext('2d');
 
     const chartConfig = {
-        type: 'bar', // Use 'bar' chart type for bar chart
+        type: 'bar',
         data: {
             labels: labels,
             datasets: [
@@ -215,7 +219,94 @@ function createChart(elementId, labels, dataForChart) {
                 },
                 title: {
                     display: true,
-                    text: 'Monthly Workplace Averages in Gauteng',
+                    text: 'Monthly Workplace  Average Changes in Gauteng for 2022',
+                },
+            },
+        },
+    };
+
+    new Chart(ctx, chartConfig);
+}
+//Function to create new array for only EasternCape data
+function separateOnlyEasternCape(data) {
+    return data.filter(row => row.sub_region_1 === 'Eastern Cape');
+}
+function calculateMonthlyAveragesForGroceryGraph(data) {
+    const monthlyGroceryAverages = {};
+
+    data.forEach(row => {
+        const date = row.date;
+        const month = date.split('-')[1];
+
+        if (!monthlyGroceryAverages[month]) {
+            monthlyGroceryAverages[month] = [];
+        }
+
+        monthlyGroceryAverages[month].push(parseFloat(row.grocery_and_pharmacy_percent_change_from_baseline));
+    });
+
+
+    // Calculate the average for each month
+    for (const month in monthlyGroceryAverages) {
+        const values = monthlyGroceryAverages[month];
+        const sum = values.reduce((acc, value) => acc + value, 0);
+        const average = sum / values.length;
+        monthlyGroceryAverages[month] = average;
+    }
+    return monthlyGroceryAverages;
+}
+
+
+function createChart3(elementId, labels, dataForChart1, dataForChart2) {
+    const ctx = document.getElementById(elementId).getContext('2d');
+
+    const chartConfig = {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Gauteng',
+                    data: dataForChart1,
+                    borderColor: 'rgb(75, 192, 192)',
+                    borderWidth: 2,
+                },
+                {
+                    label: 'Eastern Cape',
+                    data: dataForChart2,
+                    borderColor: 'rgb(192, 75, 192)',
+                    borderWidth: 2,
+                },
+            ],
+        },
+        options: {
+            scales: {
+                x: {
+                    display: true,
+                    title: {
+                        display: true,
+                        text: 'Month',
+                    },
+                },
+                y: {
+                    beginAtZero: false,
+                    ticks: {
+                        stepSize: 25,
+                    },
+                    title: {
+                        display: true,
+                        text: 'Grocery & Pharmacy Average Change',
+                    },
+                },
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                },
+                title: {
+                    display: true,
+                    text: 'Monthly Grocery & Pharmacy Average Changes for Gauteng and Eastern Cape for 2022',
                 },
             },
         },

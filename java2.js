@@ -40,16 +40,16 @@ function ReadCSV(e) {
             const monthlyAverages = calculateMonthlyAveragesForWorkGraph(gautengData);
             // Calculate monthly averages for Gauteng
             const gautengMonthlyAverages = calculateMonthlyAveragesForGroceryGraph(gautengData);
-            // Separate data for Eastern Cape
-            const easternCapeData = separateOnlyEasternCape(originalData);
+            // Separate data for Western Cape
+            const WesternCapeData = separateOnlyWesternCape(originalData);
 
-            // Calculate monthly averages for Eastern Cape
-            const easternCapeMonthlyAverages = calculateMonthlyAveragesForGroceryGraph(easternCapeData);
+            // Calculate monthly averages for Western Cape
+            const WesternCapeMonthlyAverages = calculateMonthlyAveragesForGroceryGraph(WesternCapeData);
             // Extract months and averages from the monthly averages object
             const months = Object.keys(monthlyAverages);
             const monthlyWorkAveragesValues = Object.values(monthlyAverages);
             const gautengAveragesValues = Object.values(gautengMonthlyAverages);
-            const easternCapeAveragesValues = Object.values(easternCapeMonthlyAverages);
+            const WesternCapeAveragesValues = Object.values(WesternCapeMonthlyAverages);
             
             // Filter data for January from the copy
             const januaryData = filterDataForJanuary(gautengData);
@@ -67,7 +67,7 @@ function ReadCSV(e) {
             createChart2('gautengWorkMonthlyAveragesChartRetail',monthLabels, monthlyWorkAveragesValues);
 
             
-            createChart3('GautengECapeGroceryPharmacyChart', monthLabels, gautengAveragesValues, easternCapeAveragesValues);
+            createChart3('GautengWCapeGroceryPharmacyChart', monthLabels, gautengAveragesValues, WesternCapeAveragesValues);
         }
         reader.readAsText(file);
     }
@@ -227,9 +227,9 @@ function createChart2(elementId, labels, dataForChart) {
 
     new Chart(ctx, chartConfig);
 }
-//Function to create new array for only EasternCape data
-function separateOnlyEasternCape(data) {
-    return data.filter(row => row.sub_region_1 === 'Eastern Cape');
+//Function to create new array for only WesternCape data
+function separateOnlyWesternCape(data) {
+    return data.filter(row => row.sub_region_1 === 'Western Cape');
 }
 function calculateMonthlyAveragesForGroceryGraph(data) {
     const monthlyGroceryAverages = {};
@@ -272,7 +272,7 @@ function createChart3(elementId, labels, dataForChart1, dataForChart2) {
                     borderWidth: 2,
                 },
                 {
-                    label: 'Eastern Cape',
+                    label: 'Western Cape',
                     data: dataForChart2,
                     borderColor: 'rgb(192, 75, 192)',
                     borderWidth: 2,
@@ -306,7 +306,7 @@ function createChart3(elementId, labels, dataForChart1, dataForChart2) {
                 },
                 title: {
                     display: true,
-                    text: 'Monthly Grocery & Pharmacy Average Changes for Gauteng and Eastern Cape for 2022',
+                    text: 'Monthly Grocery & Pharmacy Average Changes for Gauteng and Western Cape for 2022',
                 },
             },
         },
